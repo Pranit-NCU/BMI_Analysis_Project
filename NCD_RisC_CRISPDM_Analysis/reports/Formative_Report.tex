@@ -1,0 +1,180 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{graphicx}
+\makeatletter
+\newsavebox\pandoc@box
+\newcommand*\pandocbounded[1]{% scales image to fit in text height/width
+  \sbox\pandoc@box{#1}%
+  \Gscale@div\@tempa{\textheight}{\dimexpr\ht\pandoc@box+\dp\pandoc@box\relax}%
+  \Gscale@div\@tempb{\linewidth}{\wd\pandoc@box}%
+  \ifdim\@tempb\p@<\@tempa\p@\let\@tempa\@tempb\fi% select the smaller of both
+  \ifdim\@tempa\p@<\p@\scalebox{\@tempa}{\usebox\pandoc@box}%
+  \else\usebox{\pandoc@box}%
+  \fi%
+}
+% Set default figure placement to htbp
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  pdftitle={Formative Assessment Report: Global Obesity and Diabetes Analysis},
+  pdfauthor={Pranit Chatterjee},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{Formative Assessment Report: Global Obesity and Diabetes
+Analysis}
+\author{Pranit Chatterjee}
+\date{2025-11-06}
+
+\begin{document}
+\maketitle
+
+\section{1. Business Understanding}\label{business-understanding}
+
+\subsection{Introduction}\label{introduction}
+
+This report investigates the relationship between obesity and diabetes
+prevalence across countries and over time, with a particular focus on
+understanding gender differences. Using data from the Non-Communicable
+Disease Risk Factor Collaboration (NCD-RisC), we explore how these two
+critical health risk factors have evolved from 1990 to 2022.
+
+\subsection{Research Questions}\label{research-questions}
+
+The analysis addresses the following key research questions:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  How does obesity prevalence compare between India and the United
+  Kingdom over time?
+\item
+  Is there a relationship between obesity and diabetes prevalence
+  globally?
+\item
+  Do gender differences exist in the obesity-diabetes relationship?
+\item
+  What trends can we observe in these health risk factors from 1990 to
+  2022?
+\end{enumerate}
+
+\subsection{Key Performance Indicators
+(KPIs)}\label{key-performance-indicators-kpis}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Prevalence of obesity (BMI ≥ 30 kg/m²):} Percentage of
+  population classified as obese
+\item
+  \textbf{Prevalence of diabetes (age 18+ years):} Age-standardized
+  percentage with diabetes diagnosis
+\item
+  \textbf{Temporal trends:} Changes in prevalence over 1990--2022
+\item
+  \textbf{Gender comparisons:} Sex-stratified analysis for Men and Women
+\item
+  \textbf{Country comparisons:} Focus on India, United Kingdom, and
+  global aggregates
+\end{itemize}
+
+\subsection{Motivation}\label{motivation}
+
+Understanding obesity and diabetes trends is critical for public health
+planning, policy development, and resource allocation. These conditions
+are major risk factors for cardiovascular disease, cancers, and other
+non-communicable diseases (NCDs). By examining trends and relationships,
+we can inform prevention strategies and identify high-risk populations.
+
+\begin{center}\rule{0.5\linewidth}{0.5pt}\end{center}
+
+\section{2. Data Understanding}\label{data-understanding}
+
+\subsection{Data Sources}\label{data-sources}
+
+This analysis uses two datasets from the NCD-RisC collaboration:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  \textbf{BMI Dataset}
+  (\texttt{NCD\_RisC\_Lancet\_2024\_BMI\_age\_standardised\_country.csv})
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Contains age-standardized prevalence of BMI categories
+  \item
+    Covers years 1990--2022
+  \item
+    Stratified by sex (Men, Women)
+  \item
+    Country-level and global aggregates
+  \end{itemize}
+\item
+  \textbf{Diabetes Dataset}
+  (\texttt{NCD\_RisC\_Lancet\_2024\_Diabetes\_age\_standardised\_countries.csv})
+
+  \begin{itemize}
+  \tightlist
+  \item
+    Contains age-standardized diabetes prevalence (18+ years)
+  \item
+    Covers years 1990--2022
+  \item
+    Stratified by sex (Men, Women)
+  \item
+    Country-level and global aggregates
+  \end{itemize}
+\end{enumerate}
+
+\subsection{Data Loading and Initial
+Exploration}\label{data-loading-and-initial-exploration}
+
+\end{document}

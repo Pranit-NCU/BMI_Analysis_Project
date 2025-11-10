@@ -1,0 +1,439 @@
+---
+title: 'Formative Assessment Report: Global Obesity and Diabetes Analysis'
+author: 
+  - "Pranit Chatterjee" 
+  - "Archie Barnett" 
+  - "Ankit Khatri"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    df_print: paged
+---
+
+# 1. Business Understanding
+
+## Introduction
+
+This report investigates the relationship between obesity and diabetes prevalence across countries and over time, with a particular focus on understanding gender differences. Using data from the Non-Communicable Disease Risk Factor Collaboration (NCD-RisC), we explore how these two critical health risk factors have evolved from 1990 to 2022.
+
+## Research Questions
+
+The analysis addresses the following key research questions:
+
+1.  How does obesity prevalence compare between countries over time?
+2.  Is there a relationship between obesity and diabetes prevalence globally?
+3.  Do gender differences exist in the obesity-diabetes relationship?
+4.  What trends can we observe in these health risk factors from 1990 to 2022?
+
+## Key Performance Indicators (KPIs)
+
+-   **Prevalence of obesity (BMI ≥ 30 kg/m²):** Percentage of population classified as obese
+-   **Prevalence of diabetes (age 18+ years):** Age-standardized percentage with diabetes diagnosis
+-   **Temporal trends:** Changes in prevalence over 1990–2022
+-   **Gender comparisons:** Sex-stratified analysis for Men and Women
+-   **Country comparisons:** Focus on India, United Kingdom, and global aggregates
+
+## Motivation
+
+Understanding obesity and diabetes trends is critical for public health planning, policy development, and resource allocation. These conditions are major risk factors for cardiovascular disease, cancers, and other non-communicable diseases (NCDs). By examining trends and relationships, we can inform prevention strategies and identify high-risk populations.
+
+------------------------------------------------------------------------
+
+# 2. Data Understanding
+
+## Data Sources
+
+This analysis uses two datasets from the NCD-RisC collaboration:
+
+1.  **BMI Dataset** (`NCD_RisC_Lancet_2024_BMI_age_standardised_country.csv`)
+    -   Contains age-standardized prevalence of BMI categories
+    -   Covers years 1990–2022
+    -   Stratified by sex (Men, Women)
+    -   Country-level and global aggregates
+2.  **Diabetes Dataset** (`NCD_RisC_Lancet_2024_Diabetes_age_standardised_countries.csv`)
+    -   Contains age-standardized diabetes prevalence (18+ years)
+    -   Covers years 1990–2022
+    -   Stratified by sex (Men, Women)
+    -   Country-level and global aggregates
+
+## Data Loading and Initial Exploration
+
+# Load required libraries
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+library(knitr)
+library(kableExtra)
+```
+
+# Load the dataset
+
+```{r}
+bmi <- read.csv("../data/NCD_RisC_Lancet_2024_BMI_age_standardised_country.csv")
+diab <- read.csv("../data/NCD_RisC_Lancet_2024_Diabetes_age_standardised_countries.csv")
+getwd()
+```
+
+# Display basic information
+
+**BMI Dataset:**
+
+```{r}
+cat("Dimensions:", nrow(bmi), "rows,", ncol(bmi), "columns\n")
+cat("Year range:", min(bmi$Year), "to", max(bmi$Year), "\n")
+cat("Sex :", unique(bmi$Sex), "\n")
+cat("Number of countries/regions:", length(unique(bmi$Country.Region.World)), "\n\n")
+```
+
+**Diabetes Dataset:**
+
+```{r}
+cat("Diabetes Dataset:\n")
+cat("Dimensions:", nrow(diab), "rows,", ncol(diab), "columns\n")
+cat("Year range:", min(diab$Year), "to", max(diab$Year), "\n")
+cat("Sex:", unique(diab$Sex), "\n")
+cat("Number of countries/regions:", length(unique(diab$Country.Region.World)), "\n")
+```
+
+## Column names and Sample data
+
+#Display first few rows of each dataset
+
+```{r}
+cat("First 6 rows of BMI dataset:\n")
+head(bmi[, 1:6])
+
+cat("\n\nFirst 6 rows of Diabetes dataset:\n")
+head(diab[, 1:6])
+```
+
+#Check unique values for key columns
+
+```{r}
+cat("Unique sexes in BMI:", unique(bmi$Sex), "\n")
+cat("Unique sexes in Diabetes:", unique(diab$Sex), "\n")
+
+```
+
+## Data Quality Summary
+
+-   **Completeness:** Both datasets contain data for 1990–2022 across multiple countries.
+-   **Sex stratification:** Data are available for both Men and Women.
+-   **Variables available:** BMI dataset includes obesity prevalence (BMI ≥ 30); Diabetes dataset includes diabetes prevalence for age 18+ years.
+-   **Missing data:** Initial inspection shows no obvious missing values in the key columns used for analysis.
+
+------------------------------------------------------------------------
+
+# 3. Data Preparation
+
+## Filtering and Cleaning
+
+For this analysis, we focus on comparing **India and the United Kingdom** and examining **global patterns**. We will filter the datasets and select the relevant columns for merging and analysis.
+
+# Filter for India and UK, all years (1990-2022)
+
+```{r}
+bmi_countries <- bmi |>
+filter(Country.Region.World %in% c("India", "United Kingdom")) |>
+select(Year, Sex, Country = Country.Region.World,
+Obesity = Prevalence.of.BMI..30.kg.m...obesity.)
+
+diab_countries <- diab |>
+filter(Country.Region.World %in% c("India", "United Kingdom")) |>
+select(Year, Sex, Country = Country.Region.World,
+Diabetes = Prevalence.of.diabetes..18..years.)
+```
+
+# Merge BMI and Diabetes for India and UK
+
+```{r}
+merged_countries <- inner_join(bmi_countries, diab_countries,
+by = c("Year", "Sex", "Country"))
+
+cat("Merged data for India and UK:\n")
+print(head(merged_countries, 10))
+cat("\nDimensions:", nrow(merged_countries), "rows\n")
+```
+
+# Filter for sex and single out data for investigating Diabetes and Obesity for people 30+ years old
+
+```{R}
+## Filter for male or female
+Gender_Filter <- 'Men'
+bmi_munged <- bmi |> filter(Sex == Gender_Filter) |> select(Year, Sex, `Country.Region.World`, `Prevalence.of.BMI..30.kg.m...obesity.`, `Prevalence.of.BMI..30.kg.m...obesity..lower.95..uncertainty.interval`, `Prevalence.of.BMI..30.kg.m...obesity..upper.95..uncertainty.interval`)
+
+Diabetes_munged <- diab |> filter(Sex == Gender_Filter) |> select(`Country.Region.World`, Sex, Year, `Proportion.of.people.with.diabetes.who.were.treated..30..years.`, `Proportion.of.people.with.diabetes.who.were.treated..30..years..lower.95..uncertainty.interval`, `Proportion.of.people.with.diabetes.who.were.treated..30..years..upper.95..uncertainty.interval`)
+```
+
+# Merge Bmi and Diabetes for Sex and age 30+
+
+```{R}
+joined_bmi_diabetes <- full_join(bmi_munged, Diabetes_munged, by = c("Year", "Sex", "Country.Region.World"))
+names(joined_bmi_diabetes)
+```
+
+## Global Average Calculation
+
+### bmi_gloabl -\> Here we are calculating average/BMI prevelance for obese people(30 kg/m\^2)
+
+### diab_global -\> we are calculating the average/mean prevalence of diabetes amongst people over 18 years of age
+
+```{r}
+bmi_global <- bmi %>%
+group_by(Year, Sex) %>%
+summarise(Obesity = mean(Prevalence.of.BMI..30.kg.m...obesity., na.rm=TRUE),
+.groups='drop')
+
+diab_global <- diab %>%
+group_by(Year, Sex) %>%
+summarise(Diabetes = mean(Prevalence.of.diabetes..18..years., na.rm=TRUE),
+.groups='drop')
+```
+
+# Merged BMI and Diabetes dataset for sex 30+ years old
+
+```{r}
+joined_bmi_diabetes |>
+                   summarise(across(where(is.numeric),
+                                    list(mean = mean, sd = sd, min = min, median = median, max = max),
+                                    .names = "{.col}_{.fn}")) |>
+                   kable() |>
+                   kable_styling()
+```
+
+# Merge global obesity and diabetes
+
+### merged_global -\> merges both mean obesity and diabetes indexes on a global level based on year and sex
+
+```{r}
+merged_global <- inner_join(bmi_global, diab_global, by = c("Year", "Sex"))
+
+cat("Global mean obesity and diabetes by year and sex:\n")
+print(head(merged_global, 11))
+```
+
+------------------------------------------------------------------------
+
+# 4. Analysis and Visualization
+
+## 4.1 Obesity and Diabetes Trends: India vs United Kingdom
+
+### Obesity Trend (1990–2022)
+
+```{r}
+ggplot(merged_countries, aes(x=Year, y=Obesity, color=Sex, linetype=Country)) +
+geom_line(size=1) +
+labs(title="Obesity Prevalence Trends: India vs United Kingdom (1990–2022)",
+x="Year",
+y="Obesity Prevalence (%)",
+color="Sex",
+linetype="Country") +
+theme_minimal() +
+theme(plot.title = element_text(hjust=0.5, face="bold"))
+```
+
+**Interpretation:** This plot shows how obesity prevalence has changed over time for men and women in India and the United Kingdom. We can observe how obesity has been increasing in each country and how the patterns differs by sex.
+
+### Diabetes Trend (1990–2022)
+
+```{r}
+ggplot(merged_countries, aes(x=Year, y=Diabetes, color=Sex, linetype=Country)) +
+geom_line(size=1) +
+labs(title="Diabetes Prevalence Trends: India vs United Kingdom (1990–2022)",
+x="Year",
+y="Diabetes Prevalence (%)",
+color="Sex",
+linetype="Country") +
+theme_minimal() +
+theme(plot.title = element_text(hjust=0.5, face="bold"))
+```
+
+**Interpretation:** This plot displays diabetes trends over the same period. We can assess whether diabetes prevalence has increased or decreased and whether the pattern mirrors obesity trends.
+
+## 4.2 Relationship Between Obesity and Diabetes (2022)
+
+```{r}
+merged_2022 <- merged_countries %>% filter(Year == 2022)
+
+ggplot(merged_2022, aes(x=Obesity, y=Diabetes, color=Sex, shape=Country)) +
+geom_point(size=4) +
+labs(title="Obesity vs Diabetes Prevalence (2022)",
+x="Obesity Prevalence (%)",
+y="Diabetes Prevalence (%)",
+color="Sex",
+shape="Country") +
+theme_minimal() +
+theme(plot.title = element_text(hjust=0.5, face="bold"))
+```
+
+**Interpretation:** This scatter plot shows the direct relationship between obesity and diabetes prevalence in 2022 for India and the UK, stratified by sex. The positioning of the points indicates whether countries with higher obesity also have higher diabetes.
+
+## 4.3 Global Obesity-Diabetes Correlation by Sex
+
+```{r}
+ggplot(merged_global, aes(x=Obesity, y=Diabetes, color=Sex)) +
+geom_point(size=3, alpha=0.7) +
+geom_smooth(method="lm", se=FALSE, size=1) +
+labs(title="Global Mean Obesity vs Diabetes Prevalence by Sex",
+x="Global Mean Obesity Prevalence (%)",
+y="Global Mean Diabetes Prevalence (%)",
+color="Sex") +
+theme_minimal() +
+theme(plot.title = element_text(hjust=0.5, face="bold"))
+```
+
+**Interpretation:** This plot shows the correlation between global mean obesity and diabetes prevalence, with separate trend lines for men and women. A positive slope indicates that as obesity increases globally, diabetes also tends to increase.
+
+## 4.4 Summary Statistics by Country and Sex (2022)
+
+```{r}
+summary_2022 <- merged_countries %>%
+filter(Year == 2022) %>%
+select(Country, Sex, Obesity, Diabetes) %>%
+arrange(Country, Sex)
+
+cat("Summary Statistics (2022):\n\n")
+print(summary_2022)
+```
+
+## 4.5 Summary Statistics of a chosen variable for the merged Obesity and Diabetes by sex of individuals 30+ years old
+
+```{r}
+x <- joined_bmi_diabetes$`Proportion.of.people.with.diabetes.who.were.treated..30..years.`
+joined_bmi_diabetes |> 
+                   summarise(
+                      ds_mean = mean(x, na.rm = TRUE),
+                      ds_sd = sd(x, na.rm = TRUE),
+                      ds_min = min(x, na.rm = TRUE),
+                      ds_median = median(x, na.rm = TRUE),
+                      ds_max = max(x, na.rm = TRUE)
+                   ) |>
+                  kable(caption = "Summary Statistics for Variable X") |>
+                  kable_styling(full_width = FALSE)
+```
+
+**Interpretation** What we want from this is a general idea of the residual spread that our data points have. The values of x represents a Random Variable that has some form of distribution. We should look at the histogram to see if a good distribution can be found.
+
+## 4.6 Histogram of random variable X
+
+```{r}
+ggplot(joined_bmi_diabetes, aes(x)) +
+  geom_histogram(bins = 30, fill = "skyblue", color = "white") +
+  theme_minimal()
+```
+
+**Interpretation** For the proportion of people with diabetes who were treated at 30+ years old, its not a well rounded normal curve. The variable looks like its distribution is skewed to the left, we could do some transformations to improve the distribution.
+
+## 4.7 Histogram of random variable X log e
+
+```{r}
+ggplot(joined_bmi_diabetes, aes(log(x))) +
+  geom_histogram(bins = 30, fill = "skyblue", color = "white") +
+  theme_minimal()
+```
+
+**Interpretation** In this case the distribution is now skewed to the right, this is an improvement since the curve is looking a little more symmetrical and there is a clear top and bottom of the curve. More improvement is needed, so lets look at an additional transformation.
+
+## 4.8 Histogram of random variable X Square Rooted
+
+```{r}
+ggplot(joined_bmi_diabetes, aes(sqrt(x))) +
+  geom_histogram(bins = 30, fill = "skyblue", color = "white") +
+  theme_minimal()
+```
+
+**Interpretation** There are improvements in certain features but still not great distribution. The curve itself is more central however, it lacks symmetry and there are multiple peeks which show that there isn't a single high value which all the values fall into either the left or right hand side of the curve.
+
+Despite the potential problems that may occur for having less normal distributions to this data point, the random variable x can always be changed to discover a better curve for analysis. In this case, its better we use this as a learning opportunity that sometimes transforming data points can help normalise results.
+
+## 5.1 Statistical Modelling: Linear Regression and ANOVA
+
+We fit linear regression models to quantify the association between obesity and diabetes prevalence globally, stratifying by sex. The models provide estimates of the increase in diabetes prevalence per 1% increase in obesity prevalence for men and women. Additionally, we perform ANOVA to test whether the relationship differs significantly between sexes.
+
+### Linear Regression: Global Mean Obesity vs Diabetes (Stratified by Sex)
+
+#Fit linear regression models separately for Men and Women
+
+```{r}
+lm_men <- lm(Diabetes ~ Obesity, data = merged_global[merged_global$Sex=="Men", ])
+lm_women <- lm(Diabetes ~ Obesity, data = merged_global[merged_global$Sex=="Women", ])
+```
+
+#Display model summaries
+
+```{r}
+cat("====== LINEAR REGRESSION MODEL: MEN ======\n")
+summary(lm_men)
+
+cat("\n====== LINEAR REGRESSION MODEL: WOMEN ======\n")
+summary(lm_women)
+```
+
+**Good:**
+
+> The linear regression models show a very strong and statistically significant association between global obesity prevalence and diabetes prevalence for both men and women, with R-squared values above 99%. This suggests that global obesity patterns explain most of the variation in diabetes rates according to this data**.**
+
+**Limitations:**
+
+> However, such a high R-squared may reflect the use of aggregated global data, which can mask variability within and between countries. The model does not account for other factors influencing diabetes, and assumptions should be checked with diagnostic plots.
+
+### Linear Regression: Global Diabetes vs Obesity over time for a single sex of 30+ years
+
+# Basic model for Diabetes vs Obesity
+
+```{r}
+plus_30_Obesity <- joined_bmi_diabetes$`Prevalence.of.BMI..30.kg.m...obesity.`
+plus_30_Diabetes <- joined_bmi_diabetes$`Proportion.of.people.with.diabetes.who.were.treated..30..years.`
+ds_Year <- joined_bmi_diabetes$Year
+
+basic_lm <- lm(plus_30_Diabetes ~ plus_30_Obesity, data = joined_bmi_diabetes)
+```
+
+# Multi model for Diabetes vs Obesity + Time
+
+```{r}
+multi_lm <- lm(plus_30_Diabetes ~ plus_30_Obesity + ds_Year, data = joined_bmi_diabetes)
+```
+
+# Multi model for Diabetes vs Log(Obesity) + Time
+
+```{r}
+multi_log_lm <- lm(plus_30_Diabetes ~ log(plus_30_Obesity) + ds_Year, data = joined_bmi_diabetes)
+```
+
+# Model summaries
+
+```{r}
+cat("====== LINEAR REGRESSION MODEL: Basic ======\n")
+summary(basic_lm)
+
+cat("====== LINEAR REGRESSION MODEL: Multiple ======\n")
+summary(multi_lm)
+
+cat("====== LINEAR REGRESSION MODEL: Multiple + Transformed ======\n")
+summary(multi_log_lm)
+```
+
+# Fit model with interaction between Sex and Obesity
+
+```{r}
+merged_data <- full_join(bmi, diab, by = c("Year", "Sex", "Country.Region.World"))
+names(merged_data)
+```
+
+```{r}
+lm_interaction <- lm (Prevalence.of.diabetes..18..years. ~ Prevalence.of.BMI..30.kg.m...obesity. + Sex, data = merged_data)
+summary(lm_interaction)
+```
+
+## Investigative Conclusion
+
+The linear regression model evaluated the relationship between obesity prevalence and diabetes prevalence across countries and years, accounting for sex as an additional predictor. The model found that higher obesity prevalence is significantly associated with increased diabetes prevalence: for each unit increase in the prevalence of obesity, diabetes prevalence rises on average by approximately 0.31 percentage points, with a highly significant p-value (<2×10−16\<2×10−16).
+
+The coefficient for sex (Women) is negative and statistically significant, indicating that, after adjusting for obesity, women tend to have a lower diabetes prevalence than men. The intercept is also significant, representing baseline diabetes prevalence when other predictors are zero.
+
+While the model fits the data well overall (all predictors highly significant), the Multiple R-squared (0.48) shows that about 48% of the variation in diabetes prevalence is explained by obesity and sex alone. This suggests that other factors—such as genetics, lifestyle, and health system variables—play a substantial role. The residual standard error and patterns in residuals further support the need for more complex models or additional predictors for full understanding.
+
+**In summary:** The model confirms obesity and sex are both important predictors of diabetes prevalence globally, but much of the variation in diabetes prevalence cannot be explained by these factors alone. A more nuanced investigation including other risk factors is recommended for a deeper understanding.

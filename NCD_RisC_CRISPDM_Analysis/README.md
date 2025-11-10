@@ -2,7 +2,7 @@ PROJECT: NCD_RisC_CRISPDM_Analysis
 ===================================
 
 Authors: Pranit Chatterjee, Archie Barnett, Ankit Khatri
-Date: [Insert Submission Date]
+Date: 10/11/2025
 Module: Data Science and Statistics - Formative Assessment (CRISP-DM)
 
 ----------------------------------------------------------------------
@@ -18,12 +18,12 @@ Key objectives:
 2. Compare obesity and diabetes prevalence between countries.
 3. Assess global correlations between obesity and diabetes.
 4. Explore gender differences in these trends.
-5. Apply statistical models (Linear Regression, ANOVA) to study associations.
+5. Apply statistical models (Simple Linear Regression and Multiple Linear Regression) to study associations.
 
 The analysis is based on datasets from the Non-Communicable Disease Risk Factor 
 Collaboration (NCD-RisC), specifically:
-- BMI_age_standardised_country.csv
-- Diabetes_age_standardised_countries.csv
+- NCD_RisC_Lancet_2024_BMI_age_standardised_country.csv
+- NCD_RisC_Lancet_2024_Diabetes_age_standardised_countries.csv
 
 ----------------------------------------------------------------------
 DIRECTORY STRUCTURE
@@ -37,7 +37,7 @@ NCD_RisC_CRISPDM_Analysis/
 │                     - NCD_RisC_Lancet_2024_Diabetes_age_standardised_countries.csv
 │
 ├── munge/          : Contains data preprocessing and cleaning scripts.
-│                     - 01-LOAD-AND-CLEAN.R : Loads raw data, filters, merges,
+│                     - 01-A.R(1) : Loads raw data, filters, merges,
 │                       and creates clean datasets (merged_countries, merged_global,
 │                       joined_bmi_diabetes).
 │
@@ -112,7 +112,7 @@ KEY OUTPUTS
    - joined_bmi_diabetes : Combined obesity-diabetes dataset for 30+ males.
 
 2. Analytical results:
-   - Trend plots over time for India vs UK.
+   - Trend plots over time for India vs UK, UK vs Global.
    - Global scatter plots (Obesity vs Diabetes).
    - Regression summaries and model diagnostics.
    - Histograms and transformations for data normality exploration.
@@ -126,7 +126,7 @@ KEY OUTPUTS
 NOTES
 ----------------------------------------------------------------------
 
-- Run the `munge/01-LOAD-AND-CLEAN.R` script only when new raw data is added or updated.
+- Run the `munge/01-A.R(1)` script only when new raw data is added or updated.
 - Always re-run `load.project()` after making changes to data preparation scripts.
 - Use relative paths inside R Markdown and munge scripts when possible
   (avoid hard-coded file paths like D:/ or C:/ for portability).
